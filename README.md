@@ -35,6 +35,4 @@ AI replies should use `role: "assistant"`.
 - How conversation history or interview sessions will be managed
 - Error handling and connection status
 
-**Note:** The frontend is currently a prototype. The loading spinner is a placeholder until the backend is connected.
-
 Repo: https://github.com/TimCarterNZ/Mission-3-AI-Interviewer
