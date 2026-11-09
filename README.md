@@ -1,16 +1,40 @@
-# React + Vite
+**AI Mock Interviewer – Frontend Ready**
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+I've pushed the initial React frontend to `main`.
 
-Currently, two official plugins are available:
+**Implemented:**
+- Job title input and Start/Stop Interview functionality
+- Job title locked while an interview is active
+- Chat interface and response submission
+- Connection status with animated loading spinner
+- Conversation message state
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+**Backend integration requirements:**
 
-## React Compiler
+The frontend will need to:
+1. Send the selected `jobTitle` when starting an interview.
+2. Receive the AI's opening question.
+3. Send subsequent user responses to the AI.
+4. Receive and display AI replies.
+5. Support multiple consecutive user messages.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Messages currently use this structure:
 
-## Expanding the Oxlint configuration
+```js
+{
+    role: "user",
+    content: "Example response"
+}
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+AI replies should use `role: "assistant"`.
+
+**Still to agree on:**
+- API endpoint names and HTTP methods
+- Request and response JSON structure
+- How conversation history or interview sessions will be managed
+- Error handling and connection status
+
+**Note:** The frontend is currently a prototype. The loading spinner is a placeholder until the backend is connected.
+
+Repo: https://github.com/TimCarterNZ/Mission-3-AI-Interviewer
