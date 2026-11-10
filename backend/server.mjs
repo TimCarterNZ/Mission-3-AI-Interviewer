@@ -18,7 +18,7 @@ const sessions = new Map();
 // Start a new interview
 app.post("/api/interview/start", (req, res) => {
   try {
-    const { jobTitle } = req.body;
+    const { jobTitle } = req.body || {};
 
     const result = startInterview(jobTitle);
     const sessionId = randomUUID();
