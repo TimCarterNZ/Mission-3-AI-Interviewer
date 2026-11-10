@@ -117,7 +117,7 @@ app.delete("/api/interview/:sessionId", async (req, res) => {
       })
     }
 
-    session.delete(sessionId);
+    sessions.delete(sessionId);
 
     res.json({
       message: "Interview stopped successfully"
