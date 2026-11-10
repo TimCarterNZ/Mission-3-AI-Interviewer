@@ -14,6 +14,7 @@ function App() {
         if (interviewStarted) {
             setInterviewStarted(false);
             setMessages([]);
+            setUserMessage("");
             return;
         }
 
