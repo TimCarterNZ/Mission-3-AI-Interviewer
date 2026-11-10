@@ -420,6 +420,7 @@ function App() {
                             className={styles["chat-input"]}
                             placeholder="Type your response here..."
                             value={userMessage}
+                            disabled={loading}
                             onChange={(e) => setUserMessage(e.target.value)}
                         />
 
