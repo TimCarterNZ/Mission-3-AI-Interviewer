@@ -9,16 +9,38 @@ function App() {
     const [messages, setMessages] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [sessionId, setSessionId] = useState(null);
 
     // ----------------------------------------------------------//
 
-    function handleInterviewToggle() {
+    async function handleInterviewToggle() {
+        if (loading) return;
+
         if (interviewStarted) {
-            setInterviewStarted(false);
-            setMessages([]);
-            setUserMessage("");
-            setLoading(false);
-            setError("");
+
+            try{
+                setLoading(true);
+                setError("");
+
+                const response = await fetch(`http://localhost:3001/api/interview/${sessionId}`, {
+                    method: "DELETE",
+                });
+
+                if (!response.ok && response.status !== 404) {
+                    throw new Error("Failed to stop interview");
+                }
+
+                setInterviewStarted(false);
+                setSessionId(null);
+                setMessages([]);
+                setUserMessage("");
+
+            } catch (error) {
+                setError(error);
+            } finally {
+                setLoading(false);
+            }
+
             return;
         }
 
@@ -27,36 +49,117 @@ function App() {
             return;
         }
 
-        setError("");
-        setInterviewStarted(true);
+        try {
+            setLoading(true);
+            setError("");
 
-        setMessages([
-            {
-                role: "system",
-                content: "Connecting to your mock interviewer",
-            },
-        ]);
+            const response = await fetch(`http://localhost:3001/api/interview/start`, {
+                method: "POST",
+                headers: { ContentType: "application/json" },
+                body: JSON.stringify({
+                    jobTitle: jobTitle.trim(),
+                }),
+            });
 
-        console.log("Job title to send to AI:", jobTitle);
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "Failed to start interview");
+            }
+
+            setSessionId(data.sessionId);
+            setInterviewStarted(true);
+            setUserMessage("");
+
+            setMessages([
+                {
+                    role: "ai",
+                    content: data.question,
+                },
+            ]);
+
+        } catch (error){
+            setError(error);
+        }
+        finally {
+            setLoading(false);
+        }
     }
 
     // ----------------------------------------------------------//
 
-    function handleSubmit(e) {
+    async function handleSubmit(e) {
         e.preventDefault();
 
-        if (!userMessage.trim() || !interviewStarted || loading) {
+        if (!userMessage.trim() || !interviewStarted || loading || !sessionId) {
             return;
         }
 
-        const newMessage = {
-            role: "user",
-            content: userMessage.trim(),
-        };
+        const answer = userMessage.trim();
 
-        setMessages((previousMessages) => [...previousMessages, newMessage]);
+        setMessages((previousMessage) => [...previousMessage,
+            {
+                role: "ai",
+                content: answer,
+            },
+        ]);
 
         setUserMessage("");
+
+        try {
+            setLoading(true);
+            setError("");
+
+            const response = await fetch(`http://localhost:3001/api/interview/answer`, {
+                    method: "POST",
+                    headers: { ContentType: "application/json", },
+                    body: JSON.stringify({
+                        sessionId,
+                        answer,
+                    }),
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "Failed to submit answer.");
+            }
+
+            if (data.completed){
+
+                setMessages((previousMessages) => [
+                    ...previousMessages,
+                    {
+                        role: "ai",
+                        content: data.feedback,
+                    },
+                ]);
+
+                setInterviewStarted(false);
+                setSessionId(null);
+            } else {
+
+                setMessages((previousMessages) => [
+                    ...previousMessages,
+                    {
+                        role: "ai",
+                        content: data.question,
+                    },
+                ]);
+            }
+        } catch (error) {
+
+            setUserMessage(answer);
+
+            setMessages((previousMessages) =>
+                previousMessages.slice(0,-1)
+            );
+
+            setError(error.message);
+        } finally {
+            setLoading(false);
+        }
     }
 
     // ----------------------------------------------------------//
