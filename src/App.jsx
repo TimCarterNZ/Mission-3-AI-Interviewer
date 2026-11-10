@@ -36,7 +36,7 @@ function App() {
                 setUserMessage("");
 
             } catch (error) {
-                setError(error);
+                setError(error.message);
             } finally {
                 setLoading(false);
             }
@@ -112,7 +112,7 @@ function App() {
 
             const response = await fetch(`http://localhost:3001/api/interview/answer`, {
                     method: "POST",
-                    headers: { ContentType: "application/json", },
+                    headers: { "Content-Type": "application/json", },
                     body: JSON.stringify({
                         sessionId,
                         answer,
