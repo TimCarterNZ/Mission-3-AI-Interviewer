@@ -271,7 +271,7 @@ function App() {
                             className={`${styles["primary-button"]} ${
                                 interviewStarted ? styles["stop-button"] : ""
                             }`}
-                            disabled={!jobTitle.trim()}
+                            disabled={!jobTitle.trim() || loading}
                             onClick={handleInterviewToggle}
                         >
                             {interviewStarted

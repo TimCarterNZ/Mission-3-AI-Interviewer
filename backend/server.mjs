@@ -79,7 +79,7 @@ app.post("/api/interview/answer", async (req, res) => {
     session.history = history;
     session.currentQuestion = result.question;
     session.completed = result.completed;
-    
+
     if (result.completed) {
       sessions.delete(sessionId);
     }
