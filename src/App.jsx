@@ -394,14 +394,16 @@ function App() {
 
                         {messages.map((message, index) => (
                             <div key={index} className={styles["chat-message"]}>
-                                {message.role === "system" && (
-                                    <span
-                                        className={styles["loading-spinner"]}
-                                    ></span>
-                                )}
                                 <p>{message.content}</p>
                             </div>
                         ))}
+
+                        {loading && (
+                            <div className={styles["chat-message"]}>
+                                <span className={styles["loading-spinner"]}></span>
+                                <p>AI interviewer is thinking...</p>
+                            </div>
+                        )}
                     </div>
 
                     {/* User Input */}
