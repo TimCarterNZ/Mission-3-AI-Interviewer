@@ -45,7 +45,7 @@ function App() {
     function handleSubmit(e) {
         e.preventDefault();
 
-        if (!userMessage.trim() || !interviewStarted) {
+        if (!userMessage.trim() || !interviewStarted || loading) {
             return;
         }
 
