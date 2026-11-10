@@ -332,6 +332,12 @@
     flex-shrink: 0;
 }
 
+.error-message {
+    color: #c62828;
+    font-size: 0.9rem;
+    margin: 0.5rem 0;
+}
+
 .chat-message-ai,
 .chat-message-user {
     margin-bottom: 20px;

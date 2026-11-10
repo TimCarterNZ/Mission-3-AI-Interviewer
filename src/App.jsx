@@ -7,6 +7,8 @@ function App() {
     const [interviewStarted, setInterviewStarted] = useState(false);
     const [userMessage, setUserMessage] = useState("");
     const [messages, setMessages] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
     // ----------------------------------------------------------//
 
@@ -15,14 +17,19 @@ function App() {
             setInterviewStarted(false);
             setMessages([]);
             setUserMessage("");
+            setLoading(false);
+            setError("");
             return;
         }
 
         if (!jobTitle.trim()) {
+            setError("Please enter a job title.");
             return;
         }
 
+        setError("");
         setInterviewStarted(true);
+
         setMessages([
             {
                 role: "system",
@@ -276,6 +283,12 @@ function App() {
                     {/* Conversation Window */}
 
                     <div className={styles["chat-container"]}>
+                        {error && (
+                            <p role="alert" className={styles["error-message"]}>
+                                {error}
+                            </p>
+                        )}
+
                         {messages.map((message, index) => (
                             <div key={index} className={styles["chat-message"]}>
                                 {message.role === "system" && (
@@ -308,8 +321,9 @@ function App() {
                         <button
                             type="submit"
                             className={styles["primary-button"]}
+                            disabled={loading || !userMessage.trim()}
                         >
-                            Submit
+                            {loading ? "Submitting..." : "Submit"}
                         </button>
                     </form>
                 </section>
