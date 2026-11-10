@@ -53,9 +53,9 @@ function App() {
             setLoading(true);
             setError("");
 
-            const response = await fetch(`http://localhost:3001/api/interview/start`, {
+            const response = await fetch("http://localhost:3001/api/interview/start", {
                 method: "POST",
-                headers: { ContentType: "application/json" },
+                headers: { "Content-Type": "application/json", },
                 body: JSON.stringify({
                     jobTitle: jobTitle.trim(),
                 }),
@@ -79,7 +79,7 @@ function App() {
             ]);
 
         } catch (error){
-            setError(error);
+            setError(error.message);
         }
         finally {
             setLoading(false);

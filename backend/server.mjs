@@ -18,7 +18,11 @@ const sessions = new Map();
 // Start a new interview
 app.post("/api/interview/start", (req, res) => {
   try {
+    console.log(req.body);
+
     const { jobTitle } = req.body || {};
+
+    console.log(jobTitle);
 
     const result = startInterview(jobTitle);
     const sessionId = randomUUID();
@@ -96,7 +100,7 @@ app.post("/api/interview/answer", async (req, res) => {
 });
 
 //Deletes session
-app.delete("/api/interview/delete", async (req, res) => {
+app.delete("/api/interview/:sessionId", async (req, res) => {
     const { sessionId } = req.params;
 
     const session = sessions.get(sessionId);
