@@ -95,6 +95,31 @@ app.post("/api/interview/answer", async (req, res) => {
   }
 });
 
+//Deletes session
+app.delete("/api/interview/delete", async (req, res) => {
+    const { sessionId } = req.params;
+
+    const session = sessions.get(sessionId);
+
+    if (!session) {
+      return res.status(404).json({
+        error: "Interview not found"
+      })
+    }
+
+    if (session.busy) {
+      return res.status(409).json({
+        error: "Interview is processing"
+      })
+    }
+
+    session.delete(sessionId);
+
+    res.json({
+      message: "Interview stopped successfully"
+    })
+})
+
 app.listen(3001, () => {
   console.log("Backend running on http://localhost:3001");
 });
