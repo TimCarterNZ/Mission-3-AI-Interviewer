@@ -18,7 +18,11 @@ const sessions = new Map();
 // Start a new interview
 app.post("/api/interview/start", (req, res) => {
   try {
-    const { jobTitle } = req.body;
+    console.log(req.body);
+
+    const { jobTitle } = req.body || {};
+
+    console.log(jobTitle);
 
     const result = startInterview(jobTitle);
     const sessionId = randomUUID();
@@ -80,6 +84,10 @@ app.post("/api/interview/answer", async (req, res) => {
     session.currentQuestion = result.question;
     session.completed = result.completed;
 
+    if (result.completed) {
+      sessions.delete(sessionId);
+    }
+
     res.json(result);
   } catch (error) {
     console.error(error);
@@ -90,6 +98,31 @@ app.post("/api/interview/answer", async (req, res) => {
     session.busy = false;
   }
 });
+
+//Deletes session
+app.delete("/api/interview/:sessionId", async (req, res) => {
+    const { sessionId } = req.params;
+
+    const session = sessions.get(sessionId);
+
+    if (!session) {
+      return res.status(404).json({
+        error: "Interview not found"
+      })
+    }
+
+    if (session.busy) {
+      return res.status(409).json({
+        error: "Interview is processing"
+      })
+    }
+
+    sessions.delete(sessionId);
+
+    res.json({
+      message: "Interview stopped successfully"
+    })
+})
 
 app.listen(3001, () => {
   console.log("Backend running on http://localhost:3001");
