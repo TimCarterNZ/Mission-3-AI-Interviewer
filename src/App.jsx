@@ -1,5 +1,6 @@
 import styles from "./App.module.css";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import ReactMarkdown from "react-markdown";
 
 function App() {
     // Interview Functionality
@@ -10,6 +11,18 @@ function App() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [sessionId, setSessionId] = useState(null);
+    const latestAIMessageRef = useRef(null);
+
+    // ----------------------------------------------------------//
+
+    // Scrolling behaviour
+
+    useEffect(() => {
+        latestAIMessageRef.current?.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+        });
+    }, [messages]);
 
     // ----------------------------------------------------------//
 
@@ -17,14 +30,16 @@ function App() {
         if (loading) return;
 
         if (interviewStarted) {
-
-            try{
+            try {
                 setLoading(true);
                 setError("");
 
-                const response = await fetch(`http://localhost:3001/api/interview/${sessionId}`, {
-                    method: "DELETE",
-                });
+                const response = await fetch(
+                    `http://localhost:3001/api/interview/${sessionId}`,
+                    {
+                        method: "DELETE",
+                    },
+                );
 
                 if (!response.ok && response.status !== 404) {
                     throw new Error("Failed to stop interview");
@@ -34,7 +49,6 @@ function App() {
                 setSessionId(null);
                 setMessages([]);
                 setUserMessage("");
-
             } catch (error) {
                 setError(error.message);
             } finally {
@@ -53,13 +67,16 @@ function App() {
             setLoading(true);
             setError("");
 
-            const response = await fetch("http://localhost:3001/api/interview/start", {
-                method: "POST",
-                headers: { "Content-Type": "application/json", },
-                body: JSON.stringify({
-                    jobTitle: jobTitle.trim(),
-                }),
-            });
+            const response = await fetch(
+                "http://localhost:3001/api/interview/start",
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        jobTitle: jobTitle.trim(),
+                    }),
+                },
+            );
 
             const data = await response.json();
 
@@ -77,11 +94,9 @@ function App() {
                     content: data.question,
                 },
             ]);
-
-        } catch (error){
+        } catch (error) {
             setError(error.message);
-        }
-        finally {
+        } finally {
             setLoading(false);
         }
     }
@@ -97,9 +112,10 @@ function App() {
 
         const answer = userMessage.trim();
 
-        setMessages((previousMessage) => [...previousMessage,
+        setMessages((previousMessage) => [
+            ...previousMessage,
             {
-                role: "ai",
+                role: "user",
                 content: answer,
             },
         ]);
@@ -110,14 +126,17 @@ function App() {
             setLoading(true);
             setError("");
 
-            const response = await fetch(`http://localhost:3001/api/interview/answer`, {
+            const response = await fetch(
+                `http://localhost:3001/api/interview/answer`,
+                {
                     method: "POST",
-                    headers: { "Content-Type": "application/json", },
+                    headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         sessionId,
                         answer,
                     }),
-                }
+                    signal: AbortSignal.timeout(60),
+                },
             );
 
             const data = await response.json();
@@ -126,8 +145,7 @@ function App() {
                 throw new Error(data.error || "Failed to submit answer.");
             }
 
-            if (data.completed){
-
+            if (data.completed) {
                 setMessages((previousMessages) => [
                     ...previousMessages,
                     {
@@ -139,7 +157,6 @@ function App() {
                 setInterviewStarted(false);
                 setSessionId(null);
             } else {
-
                 setMessages((previousMessages) => [
                     ...previousMessages,
                     {
@@ -149,14 +166,15 @@ function App() {
                 ]);
             }
         } catch (error) {
-
             setUserMessage(answer);
 
-            setMessages((previousMessages) =>
-                previousMessages.slice(0,-1)
-            );
+            setMessages((previousMessages) => previousMessages.slice(0, -1));
 
-            setError(error.message);
+            setError(
+                error.name === "TimeoutError"
+                    ? "The interviewer took too long to respond. Please try again."
+                    : "Something went wrong. Please try again.",
+            );
         } finally {
             setLoading(false);
         }
@@ -351,7 +369,6 @@ function App() {
 
                 <section className={styles["card"]}>
                     <div className={styles["section-heading"]}>
-                        <span className={styles["step-number"]}>1</span>
                         <h2>Interview Practice</h2>
                     </div>
 
@@ -386,22 +403,51 @@ function App() {
                     {/* Conversation Window */}
 
                     <div className={styles["chat-container"]}>
-                        {error && (
-                            <p role="alert" className={styles["error-message"]}>
-                                {error}
-                            </p>
-                        )}
-
                         {messages.map((message, index) => (
-                            <div key={index} className={styles["chat-message"]}>
-                                <p>{message.content}</p>
+                            <div
+                                key={index}
+                                className={`${styles["chat-message"]} ${
+                                    message.role === "user"
+                                        ? styles["user-message"]
+                                        : styles["ai-message"]
+                                }`}
+                                ref={
+                                    !error && index === messages.length - 1
+                                        ? latestAIMessageRef
+                                        : null
+                                }
+                            >
+                                <strong>
+                                    {message.role === "ai"
+                                        ? "Interviewer: "
+                                        : "User: "}
+                                </strong>
+
+                                <ReactMarkdown>{message.content}</ReactMarkdown>
                             </div>
                         ))}
 
                         {loading && (
                             <div className={styles["chat-message"]}>
-                                <span className={styles["loading-spinner"]}></span>
-                                <p>AI interviewer is thinking...</p>
+                                <p>
+                                    <strong>
+                                        AI interviewer is thinking...
+                                    </strong>{" "}
+                                    <span
+                                        className={styles["loading-spinner"]}
+                                    ></span>
+                                </p>
+                            </div>
+                        )}
+
+                        {error && (
+                            <div
+                                role="alert"
+                                ref={latestAIMessageRef}
+                                className={styles["error-message"]}
+                            >
+                                <strong>Something went wrong</strong>
+                                <p>{error}</p>
                             </div>
                         )}
                     </div>
