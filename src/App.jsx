@@ -7,48 +7,159 @@ function App() {
     const [interviewStarted, setInterviewStarted] = useState(false);
     const [userMessage, setUserMessage] = useState("");
     const [messages, setMessages] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
+    const [sessionId, setSessionId] = useState(null);
 
     // ----------------------------------------------------------//
 
-    function handleInterviewToggle() {
+    async function handleInterviewToggle() {
+        if (loading) return;
+
         if (interviewStarted) {
-            setInterviewStarted(false);
-            setMessages([]);
+
+            try{
+                setLoading(true);
+                setError("");
+
+                const response = await fetch(`http://localhost:3001/api/interview/${sessionId}`, {
+                    method: "DELETE",
+                });
+
+                if (!response.ok && response.status !== 404) {
+                    throw new Error("Failed to stop interview");
+                }
+
+                setInterviewStarted(false);
+                setSessionId(null);
+                setMessages([]);
+                setUserMessage("");
+
+            } catch (error) {
+                setError(error.message);
+            } finally {
+                setLoading(false);
+            }
+
             return;
         }
 
         if (!jobTitle.trim()) {
+            setError("Please enter a job title.");
             return;
         }
 
-        setInterviewStarted(true);
-        setMessages([
-            {
-                role: "system",
-                content: "Connecting to your mock interviewer",
-            },
-        ]);
+        try {
+            setLoading(true);
+            setError("");
 
-        console.log("Job title to send to AI:", jobTitle);
+            const response = await fetch("http://localhost:3001/api/interview/start", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", },
+                body: JSON.stringify({
+                    jobTitle: jobTitle.trim(),
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "Failed to start interview");
+            }
+
+            setSessionId(data.sessionId);
+            setInterviewStarted(true);
+            setUserMessage("");
+
+            setMessages([
+                {
+                    role: "ai",
+                    content: data.question,
+                },
+            ]);
+
+        } catch (error){
+            setError(error.message);
+        }
+        finally {
+            setLoading(false);
+        }
     }
 
     // ----------------------------------------------------------//
 
-    function handleSubmit(e) {
+    async function handleSubmit(e) {
         e.preventDefault();
 
-        if (!userMessage.trim() || !interviewStarted) {
+        if (!userMessage.trim() || !interviewStarted || loading || !sessionId) {
             return;
         }
 
-        const newMessage = {
-            role: "user",
-            content: userMessage.trim(),
-        };
+        const answer = userMessage.trim();
 
-        setMessages((previousMessages) => [...previousMessages, newMessage]);
+        setMessages((previousMessage) => [...previousMessage,
+            {
+                role: "ai",
+                content: answer,
+            },
+        ]);
 
         setUserMessage("");
+
+        try {
+            setLoading(true);
+            setError("");
+
+            const response = await fetch(`http://localhost:3001/api/interview/answer`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", },
+                    body: JSON.stringify({
+                        sessionId,
+                        answer,
+                    }),
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "Failed to submit answer.");
+            }
+
+            if (data.completed){
+
+                setMessages((previousMessages) => [
+                    ...previousMessages,
+                    {
+                        role: "ai",
+                        content: data.feedback,
+                    },
+                ]);
+
+                setInterviewStarted(false);
+                setSessionId(null);
+            } else {
+
+                setMessages((previousMessages) => [
+                    ...previousMessages,
+                    {
+                        role: "ai",
+                        content: data.question,
+                    },
+                ]);
+            }
+        } catch (error) {
+
+            setUserMessage(answer);
+
+            setMessages((previousMessages) =>
+                previousMessages.slice(0,-1)
+            );
+
+            setError(error.message);
+        } finally {
+            setLoading(false);
+        }
     }
 
     // ----------------------------------------------------------//
@@ -263,7 +374,7 @@ function App() {
                             className={`${styles["primary-button"]} ${
                                 interviewStarted ? styles["stop-button"] : ""
                             }`}
-                            disabled={!jobTitle.trim()}
+                            disabled={!jobTitle.trim() || loading}
                             onClick={handleInterviewToggle}
                         >
                             {interviewStarted
@@ -275,16 +386,24 @@ function App() {
                     {/* Conversation Window */}
 
                     <div className={styles["chat-container"]}>
+                        {error && (
+                            <p role="alert" className={styles["error-message"]}>
+                                {error}
+                            </p>
+                        )}
+
                         {messages.map((message, index) => (
                             <div key={index} className={styles["chat-message"]}>
-                                {message.role === "system" && (
-                                    <span
-                                        className={styles["loading-spinner"]}
-                                    ></span>
-                                )}
                                 <p>{message.content}</p>
                             </div>
                         ))}
+
+                        {loading && (
+                            <div className={styles["chat-message"]}>
+                                <span className={styles["loading-spinner"]}></span>
+                                <p>AI interviewer is thinking...</p>
+                            </div>
+                        )}
                     </div>
 
                     {/* User Input */}
@@ -301,14 +420,16 @@ function App() {
                             className={styles["chat-input"]}
                             placeholder="Type your response here..."
                             value={userMessage}
+                            disabled={loading}
                             onChange={(e) => setUserMessage(e.target.value)}
                         />
 
                         <button
                             type="submit"
                             className={styles["primary-button"]}
+                            disabled={loading || !userMessage.trim()}
                         >
-                            Submit
+                            {loading ? "Submitting..." : "Submit"}
                         </button>
                     </form>
                 </section>
