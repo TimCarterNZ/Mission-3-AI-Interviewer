@@ -135,7 +135,7 @@ function App() {
                         sessionId,
                         answer,
                     }),
-                    signal: AbortSignal.timeout(60),
+                    signal: AbortSignal.timeout(6000),
                 },
             );
 
