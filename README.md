@@ -1,38 +1,100 @@
-**AI Mock Interviewer – Frontend Ready**
+# AI Mock Interviewer
 
-I've pushed the initial React frontend to `main`.
+A React-based AI mock interview application developed as part of a Mission Ready full-stack development assignment.
 
-**Implemented:**
-- Job title input and Start/Stop Interview functionality
-- Job title locked while an interview is active
-- Chat interface and response submission
-- Connection status with animated loading spinner
-- Conversation message state
+The application allows users to practise job interviews by selecting a job title, answering AI-generated questions, and receiving feedback.
 
-**Backend integration requirements:**
+## About the Project
 
-The frontend will need to:
-1. Send the selected `jobTitle` when starting an interview.
-2. Receive the AI's opening question.
-3. Send subsequent user responses to the AI.
-4. Receive and display AI replies.
-5. Support multiple consecutive user messages.
+The AI Mock Interviewer provides an interactive interview simulation through a responsive chat interface.
 
-Messages currently use this structure:
+### Features
 
-```js
-{
-    role: "user",
-    content: "Example response"
-}
-```
+- AI-generated interview questions based on a chosen job title
+- Interactive chat interface
+- Interview session management
+- AI-generated interview feedback
+- Loading indicators and error handling
+- Responsive design for desktop and mobile
 
-AI replies should use `role: "assistant"`.
+### Built With
 
-**Still to agree on:**
-- API endpoint names and HTTP methods
-- Request and response JSON structure
-- How conversation history or interview sessions will be managed
-- Error handling and connection status
+**Frontend**
+- React
+- JavaScript (JSX)
+- Vite
+- CSS Modules
+- React Markdown
 
-Repo: https://github.com/TimCarterNZ/Mission-3-AI-Interviewer
+**Backend**
+- RESTful API
+- AI integration
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js
+- npm
+- Running backend API
+
+### Installation
+
+1. Clone the repository:
+
+   ```bash
+   git clone <repository-url>
+   ```
+
+2. Navigate to the frontend directory:
+
+   ```bash
+   cd <frontend-directory>
+   ```
+
+3. Install dependencies:
+
+   ```bash
+   npm install
+   ```
+
+4. Start the development server:
+
+   ```bash
+   npm run dev
+   ```
+
+5. Open the local URL provided by Vite.
+
+**Note:** The frontend currently expects the backend to run at `http://localhost:3001`.
+
+## Usage
+
+1. Enter the job title you want to practise interviewing for.
+2. Click **Start Mock Interview**.
+3. Read the AI interviewer's question.
+4. Type and submit your answer.
+5. Continue until the interview is complete and feedback is provided.
+
+You can stop an interview at any time using the **Stop Interview** button.
+
+## API Integration
+
+The frontend communicates with the backend through three endpoints:
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| POST | `/api/interview/start` | Start an interview |
+| POST | `/api/interview/answer` | Submit an answer |
+| DELETE | `/api/interview/:sessionId` | Stop an interview |
+
+## Acknowledgements
+
+- [React](https://react.dev/)
+- [Vite](https://vite.dev/)
+- [React Markdown](https://github.com/remarkjs/react-markdown)
+- [Best-README-Template](https://github.com/othneildrew/Best-README-Template)
+
+## Disclaimer
+
+This project was developed for educational purposes only and is not affiliated with or endorsed by Turners.
